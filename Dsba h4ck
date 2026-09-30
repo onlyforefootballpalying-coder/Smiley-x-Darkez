@@ -1,0 +1,200 @@
+-- [[ Smiley X Darkz Hub - Demon Slayer: Burning Ashes ]] --
+-- [[ Optimized for Delta Executor & Anti-Ban Bypass ]] --
+
+-- Anti-Ban & Server Bypass (Spoofs common detection methods)
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local VirtualUser = game:GetService("VirtualUser")
+
+-- Anti-AFK / Anti-Disconnect
+LocalPlayer.Idled:Connect(function()
+    VirtualUser:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+    task.wait(1)
+    VirtualUser:Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+end)
+
+-- Hookmetamethod Bypass for basic Anticheat checks
+local gmt = getrawmetatable(game)
+setreadonly(gmt, false)
+local oldIndex = gmt.__index
+
+gmt.__index = newcclosure(function(self, key)
+    if not checkcaller() then
+        if key == "WalkSpeed" or key == "JumpPower" then
+            return 16 -- Returns default values to the server to prevent detection
+        end
+    end
+    return oldIndex(self, key)
+end)
+setreadonly(gmt, true)
+
+-- Lag Reduction Feature
+local function ReduceLag()
+    settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+    for _, v in pairs(workspace:GetDescendants()) do
+        if v:IsA("Part") or v:IsA("MeshPart") or v:IsA("UnionOperation") then
+            v.Material = Enum.Material.SmoothPlastic
+            v.CastShadow = false
+        elseif v:IsA("ParticleEmitter") or v:IsA("Trail") then
+            v.Enabled = false
+        end
+    end
+end
+
+-- Rayfield UI Library Setup
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu'))()
+
+local Window = Rayfield:CreateWindow({
+   Name = "Smiley X Darkz Hub | Demon Slayer",
+   LoadingTitle = "Loading Smiley X Darkz...",
+   LoadingSubtitle = "by Darkz Team",
+   ConfigurationSaving = {
+      Enabled = true,
+      FolderName = "SmileyXDarkz",
+      FileName = "BurningAshesConfig"
+   },
+   KeySystem = false
+})
+
+-- Toggles and Variables
+local FlyEnabled = false
+local FlySpeed = 50
+local AutoRemoveCombat = false
+
+-- Tabs
+local MainTab = Window:CreateTab("Main Features", 4483362458)
+local MiscTab = Window:CreateTab("Misc & Performance", 4483362458)
+
+-- Fly System
+MainTab:CreateToggle({
+   Name = "Fly (Anti-Ban Safemode)",
+   CurrentValue = false,
+   Callback = function(Value)
+      FlyEnabled = Value
+      if FlyEnabled then
+          local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+          local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
+          
+          local bv = Instance.new("BodyVelocity")
+          bv.Velocity = Vector3.new(0,0,0)
+          bv.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+          bv.Parent = HumanoidRootPart
+          
+          task.spawn(function()
+              while FlyEnabled and task.wait() do
+                  local cam = workspace.CurrentCamera
+                  local moveDirection = Vector3.new(0,0,0)
+                  
+                  if game:GetService("UserInputService"):IsKeyDown(Enum.KeyCode.W) then
+                      moveDirection = moveDirection + cam.CFrame.LookVector
+                  end
+                  if game:GetService("UserInputService"):IsKeyDown(Enum.KeyCode.S) then
+                      moveDirection = moveDirection - cam.CFrame.LookVector
+                  end
+                  if game:GetService("UserInputService"):IsKeyDown(Enum.KeyCode.A) then
+                      moveDirection = moveDirection - cam.CFrame.RightVector
+                  end
+                  if game:GetService("UserInputService"):IsKeyDown(Enum.KeyCode.D) then
+                      moveDirection = moveDirection + cam.CFrame.RightVector
+                  end
+                  
+                  bv.Velocity = moveDirection * FlySpeed
+              end
+              bv:Destroy()
+          end)
+      end
+   end,
+})
+
+MainTab:CreateSlider({
+   Name = "Fly Speed",
+   Min = 16,
+   Max = 200,
+   Default = 50,
+   Color = Color3.fromRGB(255, 0, 0),
+   Increment = 1,
+   Callback = function(Value)
+      FlySpeed = Value
+   end,
+})
+
+-- Unlimited Back Dash
+MainTab:CreateButton({
+   Name = "Unlimited Back Dash",
+   Callback = function()
+       -- Specific bypass for Demon Slayer: Burning Ashes Dash Cooldown
+       task.spawn(function()
+           while task.wait() do
+               local cd = LocalPlayer.Character:FindFirstChild("DashCooldown") or LocalPlayer:FindFirstChild("DashCooldown")
+               if cd then cd:Destroy() end
+           end
+       end)
+       Rayfield:Notify({Title = "Smiley X Darkz", Content = "Unlimited Back Dash Activated!", Duration = 3})
+   end,
+})
+
+-- Auto Remove Combat Log / Combat Tag
+MainTab:CreateToggle({
+   Name = "Auto Remove Combat Tag",
+   CurrentValue = false,
+   Callback = function(Value)
+      AutoRemoveCombat = Value
+      task.spawn(function()
+          while AutoRemoveCombat do
+              task.wait(0.5)
+              -- Detects and destroys common combat tags in character or player
+              for _, v in pairs(LocalPlayer.Character:GetChildren()) do
+                  if string.find(string.lower(v.Name), "combat") or string.find(string.lower(v.Name), "tag") then
+                      v:Destroy()
+                  end
+              end
+          end
+      end)
+   end,
+})
+
+-- Lag Reduction Button
+MiscTab:CreateButton({
+   Name = "Boost FPS / Reduce Lag",
+   Callback = function()
+       ReduceLag()
+       Rayfield:Notify({Title = "Smiley X Darkz", Content = "Textures Optimized! Lag Reduced.", Duration = 3})
+   end,
+})
+
+-- [[ FLOATING TOGGLE BUTTON (Click to Show/Hide UI) ]] --
+local ScreenGui = Instance.new("ScreenGui")
+local ToggleButton = Instance.new("TextButton")
+local UICorner = Instance.new("UICorner")
+
+ScreenGui.Name = "SmileyXToggle"
+ScreenGui.Parent = game:GetService("CoreGui")
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+ToggleButton.Name = "ToggleButton"
+ToggleButton.Parent = ScreenGui
+ToggleButton.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+ToggleButton.Position = UDim2.new(0.05, 0, 0.2, 0)
+ToggleButton.Size = UDim2.new(0, 60, 0, 60)
+ToggleButton.Font = Enum.Font.SourceSansBold
+ToggleButton.Text = "Smiley X"
+ToggleButton.TextColor3 = Color3.fromRGB(255, 0, 0)
+ToggleButton.TextSize = 14.00
+ToggleButton.Active = true
+ToggleButton.Draggable = true -- Allows mobile players to drag the button anywhere
+
+UICorner.CornerRadius = UDim.new(0, 12)
+UICorner.Parent = ToggleButton
+
+local UIHidden = false
+ToggleButton.MouseButton1Click:Connect(function()
+    if UIHidden then
+        -- Show UI
+        game:GetService("CoreGui"):FindFirstChild("Rayfield").Enabled = true
+        UIHidden = false
+    else
+        -- Hide UI
+        game:GetService("CoreGui"):FindFirstChild("Rayfield").Enabled = false
+        UIHidden = true
+    end
+end)
